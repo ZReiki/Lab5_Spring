@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторна робота №5 — Виробники</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<div class="main-wrapper">
+    <div class="header-card">
+        <h1>Лабораторна робота №5 — Виробники (Manufacturers)</h1>
+        <p class="task-desc">
+            CRUD-операції для таблиці <code>manufacturers</code> (зв'язок Один-до-Багатьох із таблицею <code>watches</code>).
+        </p>
+        <div class="form-actions" style="margin-top: 15px;">
+            <a th:href="@{/}" class="btn btn-secondary">Головна (Запити)</a>
+            <a th:href="@{/watches}" class="btn btn-secondary">Годинники</a>
+            <a th:href="@{/manufacturers}" class="btn btn-primary">Виробники</a>
+            <a th:href="@{/orders}" class="btn btn-secondary">Замовлення</a>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="card form-section">
+            <h2 th:text="${manufacturerForm.manufacturerId == null} ? 'Додати виробника' : 'Редагування (ID: ' + ${manufacturerForm.manufacturerId} + ')'"></h2>
+
+            <form method="POST" th:object="${manufacturerForm}" th:action="@{/manufacturers/save}" class="watch-form">
+                <input type="hidden" th:field="*{manufacturerId}"/>
+
+                <label>Назва виробника (Name):
+                    <input type="text" th:field="*{name}" placeholder="Напр. Tissot, Omega..." required/>
+                </label>
+
+                <label>Країна походження (Country):
+                    <input type="text" th:field="*{country}" placeholder="Напр. Switzerland, Japan..." required/>
+                </label>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Зберегти</button>
+                    <a th:if="${manufacturerForm.manufacturerId != null}" th:href="@{/manufacturers}" class="btn btn-secondary">Скасувати</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="card table-section">
+            <h2>Список виробників у базі даних</h2>
+            <div class="table-responsive">
+                <table class="watch-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Назва бренду</th>
+                        <th>Країна</th>
+                        <th>Кількість моделей</th>
+                        <th>Моделі годинників (Зв'язок 1:N)</th>
+                        <th>Дія</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="m : ${manufacturers}">
+                        <td th:text="${m.manufacturerId}" class="id-col"></td>
+                        <td th:text="${m.name}" class="brand-col"></td>
+                        <td th:text="${m.country}"></td>
+                        <td th:text="${m.watches != null ? m.watches.size() : 0}"></td>
+                        <td>
+                            <span th:if="${m.watches == null or m.watches.isEmpty()}">Немає годинників</span>
+                            <ul th:if="${m.watches != null and !m.watches.isEmpty()}" style="margin: 0; padding-left: 18px;">
+                                <li th:each="w : ${m.watches}" th:text="${w.brand + ' ($' + w.price + ')'}"></li>
+                            </ul>
+                        </td>
+                        <td class="actions-cell">
+                            <a th:href="@{/manufacturers/edit/{id}(id=${m.manufacturerId})}" class="btn-action edit">Редагувати</a>
+                            <a th:href="@{/manufacturers/delete/{id}(id=${m.manufacturerId})}" class="btn-action delete"
+                               onclick="return confirm('Видалити виробника та всі його годинники?');">Видалити</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

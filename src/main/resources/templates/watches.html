@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторна робота №5 — Годинники</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<div class="main-wrapper">
+    <div class="header-card">
+        <h1>Лабораторна робота №5 — Годинники (Watches)</h1>
+        <p class="task-desc">
+            CRUD-операції для таблиці <code>watches</code> (зв'язок Багато-до-Одного з таблицею <code>manufacturers</code>).
+        </p>
+        <div class="form-actions" style="margin-top: 15px;">
+            <a th:href="@{/}" class="btn btn-secondary">Головна (Запити)</a>
+            <a th:href="@{/watches}" class="btn btn-primary">Годинники</a>
+            <a th:href="@{/manufacturers}" class="btn btn-secondary">Виробники</a>
+            <a th:href="@{/orders}" class="btn btn-secondary">Замовлення</a>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="card form-section">
+            <h2 th:text="${watchForm.watchId == null} ? 'Додати новий годинник' : 'Редагування (ID: ' + ${watchForm.watchId} + ')'"></h2>
+
+            <form method="POST" th:object="${watchForm}" th:action="@{/watches/save}" class="watch-form">
+                <input type="hidden" th:field="*{watchId}"/>
+
+                <label>Марка годинника (Brand):
+                    <input type="text" th:field="*{brand}" placeholder="Напр. Casio, Seiko..." required/>
+                </label>
+
+                <label>Дата виходу (Release date):
+                    <input type="date" th:field="*{releaseDate}" required/>
+                </label>
+
+                <label>Тип механізму (Type):
+                    <select th:field="*{type}" required>
+                        <option value="quartz">Кварцовий</option>
+                        <option value="mechanical">Механічний</option>
+                    </select>
+                </label>
+
+                <div class="form-row">
+                    <label>Ціна ($):
+                        <input type="number" step="0.01" th:field="*{price}" required/>
+                    </label>
+
+                    <label>Діаметр (мм):
+                        <input type="number" step="0.01" th:field="*{caseDiameter}" required/>
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <label>Кількість (шт.):
+                        <input type="number" th:field="*{quantity}" required/>
+                    </label>
+
+                    <label>Гарантія (міс.):
+                        <input type="number" th:field="*{warrantyMonths}" required/>
+                    </label>
+                </div>
+
+                <label>Виробник:
+                    <select th:field="*{manufacturer}" required>
+                        <option th:each="m : ${manufacturers}" th:value="${m.manufacturerId}"
+                                th:text="${m.name + ' (' + m.country + ')'}"></option>
+                    </select>
+                </label>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Зберегти</button>
+                    <a th:if="${watchForm.watchId != null}" th:href="@{/watches}" class="btn btn-secondary">Скасувати</a>
+                </div>
+            </form>
+            <div>
+            </div>
+        </div>
+
+        <div class="card table-section">
+            <h2>Список годинників у базі даних</h2>
+            <div class="table-responsive">
+                <table class="watch-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Марка</th>
+                        <th>Дата релізу</th>
+                        <th>Тип механізму</th>
+                        <th>Ціна</th>
+                        <th>Діаметр кейсу (мм)</th>
+                        <th>Кількість</th>
+                        <th>Гарантія (міс.)</th>
+                        <th>Виробник</th>
+                        <th>Дія</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="w : ${watches}">
+                        <td th:text="${w.watchId}" class="id-col"></td>
+                        <td th:text="${w.brand}" class="brand-col"></td>
+                        <td th:text="${w.releaseDate}"></td>
+                        <td th:text="${(w.type == 'quartz') ? 'Кварцовий' : 'Механічний'}"></td>
+                        <td th:text="${w.price}"></td>
+                        <td th:text="${w.caseDiameter}"></td>
+                        <td th:text="${w.quantity}"></td>
+                        <td th:text="${w.warrantyMonths}"></td>
+                        <td th:text="${w.manufacturer != null ? w.manufacturer.name + ' (' + w.manufacturer.country + ')' : '—'}"></td>
+                        <td class="actions-cell">
+                            <a th:href="@{/watches/edit/{watchId}(watchId=${w.watchId})}" class="btn-action edit">Редагувати</a>
+                            <a th:href="@{/watches/delete/{watchId}(watchId=${w.watchId})}" class="btn-action delete"
+                               onclick="return confirm('Видалити цей запис?');">Видалити</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

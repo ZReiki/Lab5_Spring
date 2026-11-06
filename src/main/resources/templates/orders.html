@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторна робота №5 — Замовлення</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<div class="main-wrapper">
+    <div class="header-card">
+        <h1>Лабораторна робота №5 — Замовлення (Orders)</h1>
+        <p class="task-desc">
+            CRUD-операції для таблиці <code>orders</code> (зв'язок Багато-до-Багатьох із таблицею <code>watches</code> через <code>order_items</code>).
+        </p>
+        <div class="form-actions" style="margin-top: 15px;">
+            <a th:href="@{/}" class="btn btn-secondary">Головна (Запити)</a>
+            <a th:href="@{/watches}" class="btn btn-secondary">Годинники</a>
+            <a th:href="@{/manufacturers}" class="btn btn-secondary">Виробники</a>
+            <a th:href="@{/orders}" class="btn btn-primary">Замовлення</a>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="card form-section">
+            <h2 th:text="${orderForm.orderId == null} ? 'Нове замовлення' : 'Редагування (ID: ' + ${orderForm.orderId} + ')'"></h2>
+
+            <form method="POST" th:object="${orderForm}" th:action="@{/orders/save}" class="watch-form">
+                <input type="hidden" th:field="*{orderId}"/>
+
+                <label>Ім'я клієнта (Customer Name):
+                    <input type="text" th:field="*{customerName}" placeholder="Напр. Олександр Коваленко" required/>
+                </label>
+
+                <div class="form-row">
+                    <label>Кількість позицій:
+                        <input type="number" th:field="*{itemsCount}" min="1" required/>
+                    </label>
+
+                    <label>Знижка (0.05 = 5%):
+                        <input type="number" step="0.01" min="0" max="1" th:field="*{discountRate}" required/>
+                    </label>
+                </div>
+
+                <label>Загальна сума ($):
+                    <input type="number" step="0.01" th:field="*{totalAmount}" required/>
+                </label>
+
+                <div class="form-row">
+                    <label>Дата замовлення:
+                        <input type="date" th:field="*{orderDate}" required/>
+                    </label>
+
+                    <label>Дата доставки:
+                        <input type="date" th:field="*{deliveryDate}"/>
+                    </label>
+                </div>
+
+                <label>Статус (Status):
+                    <select th:field="*{status}" required>
+                        <option value="NEW">NEW (Нове)</option>
+                        <option value="PROCESSING">PROCESSING (В обробці)</option>
+                        <option value="SHIPPED">SHIPPED (Відправлено)</option>
+                        <option value="DELIVERED">DELIVERED (Доставлено)</option>
+                        <option value="CANCELLED">CANCELLED (Скасовано)</option>
+                    </select>
+                </label>
+
+                <label>Годинники у замовленні (затисніть Ctrl для вибору декількох):
+                    <select th:field="*{watches}" multiple="multiple" size="6" required>
+                        <option th:each="w : ${allWatches}"
+                                th:value="${w.watchId}"
+                                th:text="${w.brand + ' — ' + w.manufacturer.name + ' ($' + w.price + ')'}">
+                        </option>
+                    </select>
+                </label>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Зберегти</button>
+                    <a th:if="${orderForm.orderId != null}" th:href="@{/orders}" class="btn btn-secondary">Скасувати</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="card table-section">
+            <h2>Список замовлень у базі даних</h2>
+            <div class="table-responsive">
+                <table class="watch-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Клієнт</th>
+                        <th>К-сть</th>
+                        <th>Знижка</th>
+                        <th>Сума ($)</th>
+                        <th>Дата замовлення</th>
+                        <th>Дата доставки</th>
+                        <th>Статус</th>
+                        <th>Замовлені годинники (M:N)</th>
+                        <th>Дія</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="o : ${orders}">
+                        <td th:text="${o.orderId}" class="id-col"></td>
+                        <td th:text="${o.customerName}" class="brand-col"></td>
+                        <td th:text="${o.itemsCount}"></td>
+                        <td th:text="${o.discountRate}"></td>
+                        <td th:text="${o.totalAmount}"></td>
+                        <td th:text="${o.orderDate}"></td>
+                        <td th:text="${o.deliveryDate != null ? o.deliveryDate : '—'}"></td>
+                        <td th:text="${o.status}"></td>
+                        <td>
+                            <span th:if="${o.watches == null or o.watches.isEmpty()}">Не обрано</span>
+                            <ul th:if="${o.watches != null and !o.watches.isEmpty()}" style="margin: 0; padding-left: 18px;">
+                                <li th:each="w : ${o.watches}"
+                                    th:text="${w.brand + ' (' + w.manufacturer.name + ', $' + w.price + ')'}">
+                                </li>
+                            </ul>
+                        </td>
+                        <td class="actions-cell">
+                            <a th:href="@{/orders/edit/{id}(id=${o.orderId})}" class="btn-action edit">Редагувати</a>
+                            <a th:href="@{/orders/delete/{id}(id=${o.orderId})}" class="btn-action delete"
+                               onclick="return confirm('Видалити це замовлення?');">Видалити</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

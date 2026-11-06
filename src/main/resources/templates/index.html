@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторна робота №5 — Головна сторінка</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<div class="main-wrapper">
+    <div class="header-card">
+        <h1>Лабораторна робота №5 — Робота зі зв'язаними таблицями</h1>
+        <p class="task-desc">
+            Відображення інформації та виконання пошукових запитів між таблицями зі зв'язками Один-до-Багатьох (<code>1:N</code>) та Багато-до-Багатьох (<code>M:N</code>).
+        </p>
+        <div class="form-actions" style="margin-top: 15px;">
+            <a th:href="@{/}" class="btn btn-primary">Головна (Запити)</a>
+            <a th:href="@{/watches}" class="btn btn-secondary">Годинники</a>
+            <a th:href="@{/manufacturers}" class="btn btn-secondary">Виробники</a>
+            <a th:href="@{/orders}" class="btn btn-secondary">Замовлення</a>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="card form-section">
+            <h2>Запити до бази даних</h2>
+
+            <form method="GET" th:action="@{/}" class="watch-form" style="margin-bottom: 20px;">
+                <label>1. Пошук годинників за виробником (1:N):
+                    <select name="manufacturerId">
+                        <option value="">-- Усі виробники --</option>
+                        <option th:each="m : ${manufacturers}"
+                                th:value="${m.manufacturerId}"
+                                th:selected="${m.manufacturerId == selectedManufacturerId}"
+                                th:text="${m.name + ' (' + m.country + ')'}">
+                        </option>
+                    </select>
+                </label>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Знайти годинники</button>
+                </div>
+            </form>
+
+
+            <form method="GET" th:action="@{/}" class="watch-form" style="margin-bottom: 20px;">
+                <label>2. Пошук годинників за країною виробника (1:N):
+                    <input type="text" name="country" th:value="${selectedCountry}" placeholder="Напр. Switzerland, Japan..." />
+                </label>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Фільтрувати за країною</button>
+                </div>
+            </form>
+
+
+            <form method="GET" th:action="@{/}" class="watch-form">
+                <label>3. Пошук замовлень за брендом годинника (M:N):
+                    <input type="text" name="brandName" th:value="${selectedBrand}" placeholder="Напр. Tissot, Casio..." />
+                </label>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Знайти замовлення</button>
+                    <a th:href="@{/}" class="btn btn-secondary">Скинути всі фільтри</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="card table-section">
+            <h2>Результати вибірки годинників (Таблиці Watches + Manufacturers)</h2>
+            <div class="table-responsive" style="margin-bottom: 30px;">
+                <table class="watch-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Модель годинника</th>
+                        <th>Виробник</th>
+                        <th>Країна</th>
+                        <th>Тип</th>
+                        <th>Ціна ($)</th>
+                        <th>На складі</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="w : ${watches}">
+                        <td th:text="${w.watchId}" class="id-col"></td>
+                        <td th:text="${w.brand}" class="brand-col"></td>
+                        <td th:text="${w.manufacturer.name}"></td>
+                        <td th:text="${w.manufacturer.country}"></td>
+                        <td th:text="${(w.type == 'quartz') ? 'Кварцовий' : 'Механічний'}"></td>
+                        <td th:text="${w.price}"></td>
+                        <td th:text="${w.quantity}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(watches)}">
+                        <td colspan="7">Годинників не знайдено</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Результати вибірки замовлень (Таблиці Orders + Order_Items + Watches)</h2>
+            <div class="table-responsive">
+                <table class="watch-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Клієнт</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Сума ($)</th>
+                        <th>Придбані годинники та виробник (M:N)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="o : ${orders}">
+                        <td th:text="${o.orderId}" class="id-col"></td>
+                        <td th:text="${o.customerName}" class="brand-col"></td>
+                        <td th:text="${o.orderDate}"></td>
+                        <td th:text="${o.status}"></td>
+                        <td th:text="${o.totalAmount}"></td>
+                        <td>
+                            <ul style="margin: 0; padding-left: 18px;">
+                                <li th:each="w : ${o.watches}"
+                                    th:text="${w.brand + ' — ' + w.manufacturer.name + ' (' + w.manufacturer.country + '), $' + w.price}">
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(orders)}">
+                        <td colspan="6">Замовлень не знайдено</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Статистика виробників (Manufacturers + Watches)</h2>
+            <div class="table-responsive">
+                <table class="watch-table">
+                    <thead>
+                    <tr>
+                        <th>Виробник</th>
+                        <th>Країна</th>
+                        <th>Кількість моделей</th>
+                        <th>Загальний запас</th>
+                        <th>Середня ціна ($)</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="s : ${statistics}">
+                        <td th:text="${s.manufacturerName}"></td>
+                        <td th:text="${s.country}"></td>
+                        <td th:text="${s.watchCount}"></td>
+                        <td th:text="${s.totalStock}"></td>
+                        <td th:text="${#numbers.formatDecimal(s.averagePrice, 1, 2)}"></td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(statistics)}">
+                        <td colspan="5">Дані відсутні</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
